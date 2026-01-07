@@ -25,6 +25,10 @@ class StaffRepository(ABC):
         pass
 
     @abstractmethod
+    def update_partial(self, fileno: str, updates: dict) -> Optional[Staff]:
+        pass
+
+    @abstractmethod
     def delete_all(self) -> None:
         pass
 

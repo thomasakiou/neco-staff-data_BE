@@ -60,6 +60,17 @@ class SqlAlchemyStaffRepository(StaffRepository):
             return self._to_domain(model)
         return None
 
+    def update_partial(self, fileno: str, updates: dict) -> Optional[Staff]:
+        model = self.db.query(StaffModel).filter(StaffModel.fileno == fileno).first()
+        if model:
+            for k, v in updates.items():
+                if k != 'id' and k != 'fileno' and hasattr(model, k):
+                    setattr(model, k, v)
+            self.db.commit()
+            self.db.refresh(model)
+            return self._to_domain(model)
+        return None
+
     def delete_all(self) -> None:
         self.db.query(StaffModel).delete()
         self.db.query(UserModel).filter(UserModel.role == UserRole.STAFF).delete()

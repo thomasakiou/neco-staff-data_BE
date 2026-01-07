@@ -28,6 +28,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Temporary test
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 # Initialize Super Admin
 def create_super_admin():
     db = SessionLocal()

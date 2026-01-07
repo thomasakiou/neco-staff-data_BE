@@ -58,3 +58,60 @@ class ExcelLoader:
             )
             staff_list.append(staff)
         return staff_list
+
+    @staticmethod
+    def load_partial_staff_data(file_path: str) -> List[Dict]:
+        if file_path.endswith('.csv'):
+            df = pd.read_csv(file_path, encoding='latin-1', dtype=str)
+        else:
+            df = pd.read_excel(file_path, dtype=str)
+            
+        df = df.fillna('')
+        
+        # Valid staff attributes to allow updates for
+        valid_fields = {
+            'full_name', 'remark', 'conr', 'station', 'qualification', 
+            'sex', 'dob', 'dofa', 'dopa', 'doan', 'rank', 'state', 
+            'lga', 'email', 'phone'
+        }
+        
+        partial_updates = []
+        for _, row in df.iterrows():
+            data = row.to_dict()
+            
+            fileno = str(data.get('fileno', '')).strip()
+            if not fileno: continue 
+            
+            if fileno.isdigit():
+                fileno = fileno.zfill(4)
+                
+            update_data = {'fileno': fileno}
+            
+            # Helper to process DOB
+            def process_dob(val):
+                if isinstance(val, (pd.Timestamp, datetime)):
+                    return val.strftime('%y%m%d')
+                if isinstance(val, str) and len(val) >= 8:
+                    try:
+                        dt = pd.to_datetime(val, dayfirst=True)
+                        return dt.strftime('%y%m%d')
+                    except:
+                        pass
+                return str(val)
+
+            for key, val in data.items():
+                clean_key = key.lower().strip()
+                # Map some common variations if needed, or rely on strict naming
+                if clean_key == 'name': clean_key = 'full_name'
+                if clean_key == 'conraiss': clean_key = 'conr'
+                
+                if clean_key in valid_fields and str(val).strip() != '':
+                    if clean_key == 'dob':
+                        update_data[clean_key] = process_dob(val)
+                    else:
+                        update_data[clean_key] = str(val)
+            
+            if len(update_data) > 1: # If we have more than just fileno
+                partial_updates.append(update_data)
+                
+        return partial_updates

@@ -46,6 +46,26 @@ async def append_sdl(file: UploadFile = File(...), staff_repo = Depends(get_staf
             os.remove(temp_path)
             
     return {"message": "New data appended successfully, duplicates ignored"}
+
+@router.post("/bulk-update")
+async def bulk_update_staff(file: UploadFile = File(...), staff_repo = Depends(get_staff_repo)):
+    if not file.filename.endswith(('.xlsx', '.csv')):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only .xlsx and .csv allowed.")
+    
+    # Save file temporarily
+    temp_path = f"temp_bulk_update_{file.filename}"
+    with open(temp_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    try:
+        from src.application.handlers.bulk_update_handler import BulkUpdateHandler
+        handler = BulkUpdateHandler(staff_repo)
+        result = handler.handle(temp_path)
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+    return result
 @router.get("/staff", response_model=List[StaffDTO])
 async def list_staff(staff_repo = Depends(get_staff_repo), user_repo = Depends(get_user_repo)):
     handler = StaffHandler(staff_repo, user_repo)
