@@ -11,7 +11,22 @@ Base.metadata.create_all(bind=engine)
 
 settings = get_settings()
 
-app = FastAPI(title="NECO Staff Data Management System")
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="NECO Staff Data Management System",
+    root_path="/neco-staff",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://necostaffdata.netlify.app", "http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize Super Admin
 def create_super_admin():
